@@ -1,9 +1,9 @@
 const minDate = "2020-01-22";
-const maxDate = "2020-06-16";
+const maxDate = "2020-06-30";
 const minDate_dt = new Date(minDate);
 const maxDate_dt = new Date(maxDate);
 const ticksCount = 5;
-const noDataColor = "#eab11f";
+const noDataColor = "#858585";
 var lastReplacedCountry = 2;
 var updateGraphDots = null;
 var updateSlider = null;
