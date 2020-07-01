@@ -4,10 +4,10 @@ const minDate_dt = new Date(minDate);
 const maxDate_dt = new Date(maxDate);
 const ticksCount = 5;
 const noDataColor = "#858585";
-var lastReplacedCountry = 2;
-var updateGraphDots = null;
-var updateSlider = null;
-var typingTimer = null;
+const lastReplacedCountry = 2;
+const updateGraphDots = null;
+const updateSlider = null;
+const typingTimer = null;
 
 function timeToString(date) {
     return d3.timeFormat("%Y-%m-%d")(date)
@@ -30,8 +30,8 @@ function formatCountry(country) {
 }
 
 function formatMatch(match) {
-    var formatted = []
-    for (var d = new Date(minDate_dt); d <= maxDate_dt; d.setDate(d.getDate() + 1)) {
+    const formatted = []
+    for (const d = new Date(minDate_dt); d <= maxDate_dt; d.setDate(d.getDate() + 1)) {
         formatted.push({date: new Date(d), value: match[timeToString(d)]});
     }
     return formatted
@@ -41,7 +41,7 @@ const margin = {top: 50, left: 50, right: 50, bottom: 50},
     height = 600 - margin.top - margin.bottom,
     width = 1200 - margin.left - margin.right;
 
-var map_svg = d3.select("#map")
+const map_svg = d3.select("#map")
     .append("svg")
     .attr("height", height + margin.top + margin.bottom)
     .attr("width", width + margin.left + margin.right)
@@ -51,13 +51,13 @@ var map_svg = d3.select("#map")
 
 const govWidth = 1800;
 const govHeight = 100;
-var gov_info_1_svg = d3.select("#gov_info_1")
+const gov_info_1_svg = d3.select("#gov_info_1")
     .append("svg")
     .attr("width", govWidth)
     .attr("height", govHeight)
     .attr("viewBox", `0 -20 ${govWidth} ${govHeight}`);
 
-var gov_info_2_svg = d3.select("#gov_info_2")
+const gov_info_2_svg = d3.select("#gov_info_2")
     .append("svg")
     .attr("width", govWidth)
     .attr("height", govHeight)
@@ -163,8 +163,8 @@ function hslToHex(h, s, l) {
 }
 
 function timeSlider(svg, path, coutries_data) {
-    var formatDateIntoYearMonth = d3.timeFormat("%b %Y");
-    var formatDate = d3.timeFormat("%d %b");
+    const formatDateIntoYearMonth = d3.timeFormat("%b %Y");
+    const formatDate = d3.timeFormat("%d %b");
 
     const totalDays = (maxDate_dt - minDate_dt) / (1000 * 3600 * 24)
 
@@ -446,11 +446,6 @@ function displayLegend(dataSetName) {
         .style("stroke-width", 1)
         .style("stroke", "white")
         .style("fill", noDataColor);
-
-    /*svgLegend.append("g")
-        .attr("class", "whiteContent")
-        .attr("transform", "translate(0," + 45 + ")")
-        .call(d3.axisBottom(x).ticks(ticksCount));*/
 }
 
 function getDataGovernementInfo() {
@@ -483,8 +478,24 @@ function getDataGovernementInfo() {
 
     currentMeasures1 = currentMeasures1.sort(sorter).map(mapper);
     currentMeasures2 = currentMeasures2.sort(sorter).map(mapper);
+		maxChars = 269
+		currentMeasures1 = currentMeasures1.map(m => {
+			if(m.length >= maxChars) {
+				return m.slice(0, maxChars-3).trimRight() + " ..."
+			}
 
-    return [currentMeasures1, currentMeasures2];
+			return m
+		})
+		currentMeasures2 = currentMeasures2.map(m => {
+			if(m.length >= maxChars) {
+				return m.slice(0, maxChars-3).trimRight() + " ..."
+			}
+
+			return m
+		})
+		allMeasures = [currentMeasures1, currentMeasures2];
+
+    return allMeasures
 }
 
 function arraysEqual(a, b) {
@@ -938,7 +949,7 @@ function changeDate(number_days) {
     updateCountriesColor(map_svg, data.world_path, data.countries_data, getDatasetFromName(data.current_dataset), data.current_date);
     updateCountryInfo();
     updateInfoBox();
-    
+
     clearTimeout(typingTimer);
     updateGovernementInfo();
 }
@@ -953,6 +964,15 @@ window.addEventListener('mousemove', function(e){
     document.getElementById('info_box').style.top = `${top}px`;
 });
 
+window.addEventListener('keydown', function(e) {
+		switch (e.key) {
+			case 'ArrowLeft': changeDate(-1)
+			break
+			case 'ArrowRight': changeDate(1)
+			break
+		}
+})
+
 const data = {}
 d3.csv('./generated/sick.csv', sick_data => {
     data.sick = sick_data;
@@ -966,10 +986,10 @@ d3.csv('./generated/sick.csv', sick_data => {
 
         d3.csv('./generated/recovered.csv', recovered_data => {
             data.recovered = recovered_data;
-    
+
             d3.csv('./generated/confirmed.csv', confirmed_data => {
                 data.confirmed = confirmed_data;
-        
+
                 d3.csv('./generated/governments-measures.csv', gov_data => {
                     data.measures = gov_data
                     data.measures.map(m => m.date_dt = new Date(m.date));
@@ -977,22 +997,22 @@ d3.csv('./generated/sick.csv', sick_data => {
                     d3.queue()
                         .defer(d3.json, "world.topojson")
                         .await(ready)
-            
+
                     const projection = d3.geoMercator()
                         .scale(100);
-            
+
                     const world_path = d3.geoPath()
                         .projection(projection);
                     data.world_path = world_path
-            
+
                     function ready(error, world_data) {
                         const countries_data = topojson.feature(world_data, world_data.objects.countries).features;
                         data.countries_data = countries_data;
-            
+
                         continentZoom('worldButton');
                         data.country_1 = "Switzerland";
                         data.country_2 = "France";
-            
+
                         displayCountries(map_svg, world_path, countries_data, sick_data, minDate);
                         displayLegend(data.current_dataset);
                         timeSlider(map_svg, world_path, countries_data, sick_data);

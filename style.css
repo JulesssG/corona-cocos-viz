@@ -31,6 +31,7 @@ button {
 }
 
 .info_country_container {
+	margin-left: 25px;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -43,7 +44,7 @@ button {
 	display: flex;
 	justify-content: flex-start;
 	align-items: stretch;
-	padding-right: 100px;
+	/* padding-right: 100px; */
 }
 
 .buttonsForMapContainer {
@@ -61,21 +62,14 @@ button {
 		/* padding: 0 30px; */
 }
 
-#legend, .info_country_container {
-	padding-top: 90px;
-}
-
 #legend {
-	margin-right: 40px;
-}
-
-.info_country_container {
-	margin-left: 40px;
+	margin-top: 90px;
+	margin-right: 25px;
 }
 
 #play-button {
 	position: relative;
-	background: #f08080;
+	background: #858585;
 	padding-right: 26px;
 	border-radius: 3px;
 	border: none;
@@ -153,7 +147,7 @@ button {
 
 /* Dropdown Button */
 .dropdownButton {
-	background-color: #1d2757;
+	background-color: #858585;
 	min-width: 190px;
 	color: white;
 	padding: 16px;
@@ -214,15 +208,17 @@ button {
 	margin-right: 25px;
 }
 
-.graph_scale {
-	margin-left: 3px;
+.githubLinkContainer {
+	width: 100%;
+	height: 90px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-end;
 }
 
-#linkGithubContainer {
-	width: 150px;
-	margin-right: 0px;
-	margin-top: 20px;
-	margin-left: auto;
+#githubLink {
+	margin-right: 30px;
 }
 
 th, td {
