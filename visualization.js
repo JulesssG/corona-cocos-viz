@@ -4,10 +4,10 @@ const minDate_dt = new Date(minDate);
 const maxDate_dt = new Date(maxDate);
 const ticksCount = 5;
 const noDataColor = "#858585";
-const lastReplacedCountry = 2;
-const updateGraphDots = null;
-const updateSlider = null;
-const typingTimer = null;
+let lastReplacedCountry = 2;
+let updateGraphDots = null;
+let updateSlider = null;
+let typingTimer = null;
 
 function timeToString(date) {
     return d3.timeFormat("%Y-%m-%d")(date)
@@ -125,7 +125,7 @@ function continentZoom(idButton) {
     if(lastReplacedCountry == 1){
         data.country_2 = region;
         lastReplacedCountry = 2;
-    }else{
+    } else {
         lastReplacedCountry = 1;
         data.country_1 = region;
     }
