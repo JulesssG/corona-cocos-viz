@@ -1,5 +1,5 @@
 const minDate = "2020-01-22"
-const maxDate = "2020-08-12"
+const maxDate = "2020-08-18"
 const minDate_dt = new Date(minDate)
 const maxDate_dt = new Date(maxDate)
 const ticksCount = 5
