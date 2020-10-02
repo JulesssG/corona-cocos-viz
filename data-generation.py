@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Data generation notebook
-#
+# 
 # Processing and generating data files for easier use
 
 # In[1]:
@@ -11,6 +11,8 @@
 import pandas as pd
 import pycountry_convert as pc
 import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
 
 
 # ## Load data
@@ -32,10 +34,10 @@ data_frames = {
 
 for key in data_frames.keys():
     df = data_frames[key]
-
+    
     df = df[df['Country/Region'] != 'Diamond Princess']
     df = df[df['Country/Region'] != 'MS Zaandam']
-
+    
     data_frames[key] = df
 
 
@@ -46,7 +48,7 @@ for key in data_frames.keys():
 
 for key in data_frames.keys():
     df = data_frames[key]
-
+    
     df = df.replace("Cote d'Ivoire", 'Ivory Coast')
     df = df.replace("Cabo Verde", 'Cape Verde')
     df = df.replace("Congo (Brazzaville)", 'Congo')
@@ -58,7 +60,7 @@ for key in data_frames.keys():
     df = df.replace("US", 'United States')
     df = df.replace("West Bank and Gaza", 'State of Palestine')
     df = df.replace("Burma", 'Myanmar')
-
+    
     data_frames[key] = df
 
 
@@ -69,12 +71,12 @@ for key in data_frames.keys():
 
 for key in data_frames.keys():
     df = data_frames[key]
-
+    
     regions = ['Greenland', 'French Guiana', 'Falkland Islands (Malvinas)', 'New Caledonia']
-
+    
     for region in regions:
         df.loc[df['Province/State'] == region, 'Country/Region'] = region
-
+        
     data_frames[key] = df
 
 
@@ -86,15 +88,15 @@ for key in data_frames.keys():
 for key in data_frames.keys():
     df = data_frames[key]
     df = df.drop(columns='Province/State')
-
+    
     # Compute average of Lat and Long
     agg_dict = {'Lat': 'mean',
                 'Long': 'mean'}
-
+    
     # Sum the rest of the columns
     for column in df.columns[3:]:
         agg_dict[column] = 'sum'
-
+    
     data_frames[key] = df.groupby('Country/Region').agg(agg_dict).reset_index()
 
 
@@ -118,14 +120,14 @@ population_df = pd.read_csv('generated/population.csv')
 
 for key in data_frames.keys():
     df = data_frames[key]
-
+    
     df = df.merge(population_df, how='left', left_on='Country/Region', right_on='name')
     df = df.drop(columns='name')
-
+    
     # Reorder columns
     df = df[['Country/Region', 'population'] + list(df.columns[1:-1])]
     df = df.copy()
-
+    
     data_frames[key] = df
 
 
@@ -198,10 +200,10 @@ def country_to_continent(country):
             print(f"Unkown country continent: {country}")
             raise ValueError
 
-
+            
 for key in data_frames.keys():
     df = data_frames[key].copy()
-
+    
     # Compute world aggregation
     world = pd.Series(df.loc[0, :])
     world['Country/Region'] = "World"
@@ -210,21 +212,21 @@ for key in data_frames.keys():
     world['Long'] = 0
     world.loc[world.index[4:]] = df.loc[:, df.columns[4:]].sum()
     world = pd.DataFrame(world).T
-
+    
     # Compute continents aggregation
     df['Country/Region'] = df['Country/Region'].apply(country_to_continent)
-
+    
     # Aggregation dict
     agg_dict = {'population': 'sum',
                 'Lat': 'mean',
                 'Long': 'mean'}
-
+    
     # Sum the rest of the columns
     for column in df.columns[4:]:
         agg_dict[column] = 'sum'
-
+    
     df = df.groupby('Country/Region').agg(agg_dict).reset_index()
-
+    
     # Concat world, continents and countries
     df = pd.concat([world, df, data_frames[key]]).reset_index(drop=True)
     data_frames[key] = df
@@ -241,10 +243,23 @@ for key in data_frames.keys():
 
 # ## Governments measures generation
 
-# In[16]:
+# In[30]:
 
 
-data_full = pd.read_excel('https://www.acaps.org/sites/acaps/files/resources/files/acaps_covid19_government_measures_dataset_0.xlsx', sheet_name="Database")
+from urllib.request import urlopen
+try:
+    _ = urlopen('https://www.acaps.org/sites/acaps/files/resources/files/acaps_covid19_government_measures_dataset.xlsx')
+    url = 'https://www.acaps.org/sites/acaps/files/resources/files/acaps_covid19_government_measures_dataset.xlsx'
+except:
+    _ = urlopen('https://www.acaps.org/sites/acaps/files/resources/files/acaps_covid19_government_measures_dataset_0.xlsx')
+    url = 'https://www.acaps.org/sites/acaps/files/resources/files/acaps_covid19_government_measures_dataset_0.xlsx'
+
+sheets = pd.ExcelFile(url).sheet_names
+ind = np.where(['data' in sheet.lower() for sheet in sheets])[0][0]
+data_full = pd.read_excel(url, sheet_name=sheets[ind])
+
+data_full.columns = [s.strip('_') for s in data_full.columns]
+
 data_full.loc[data_full['DATE_IMPLEMENTED'].isna(), 'DATE_IMPLEMENTED'] = data_full.loc[data_full['DATE_IMPLEMENTED'].isna(), 'ENTRY_DATE']
 
 
@@ -252,7 +267,8 @@ data_full.loc[data_full['DATE_IMPLEMENTED'].isna(), 'DATE_IMPLEMENTED'] = data_f
 
 
 data = data_full[['COUNTRY', 'LOG_TYPE', 'CATEGORY', 'MEASURE', 'COMMENTS', 'DATE_IMPLEMENTED']]
-data.loc[:, 'MEASURE'] = data['MEASURE'].str.replace('\xa0', '')
+data['MEASURE'] = data['MEASURE'].str.replace('\xa0', '')
+data
 
 
 # Match the countries, delete the countries that are not in our dataset on corona cases
@@ -278,7 +294,7 @@ country_matching = {'Viet Nam': 'Vietnam',
                    'Brunei Darussalam': 'Brunei',
                    'Congo DR': 'Democratic Republic of the Congo'}
 
-others = ['Turkmenistan', 'Vanuatu', 'Tuvalu', 'Tonga', 'Tajikistan', 'Solomon Islands',
+others = ['Turkmenistan', 'Vanuatu', 'Tuvalu', 'Tonga', 'Tajikistan', 'Solomon Islands', 
           'Samoa', 'Palau', 'Nauru', 'Micronesia', 'Marshall Islands', 'Lesotho', 'Korea DPR',
           'Kiribati', 'Comoros', 'China, Hong Kong Special Administrative Region']
 data = data.loc[~data['COUNTRY'].isin(others), :]
@@ -293,5 +309,13 @@ print('Number of incorrectly named countries relative to original dataset:', num
 
 
 data.columns = ['country', 'log_type', 'category', 'measure', 'comment', 'date']
-data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
+data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d') 
 data.to_csv('generated/governments-measures.csv', index=False)
+data
+
+
+# In[ ]:
+
+
+
+
