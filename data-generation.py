@@ -5,7 +5,7 @@
 # 
 # Processing and generating data files for easier use
 
-# In[1]:
+# In[31]:
 
 
 import pandas as pd
@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore')
 
 # ## Load data
 
-# In[2]:
+# In[32]:
 
 
 data_frames = {
@@ -29,7 +29,7 @@ data_frames = {
 
 # ## Remove cruises
 
-# In[3]:
+# In[33]:
 
 
 for key in data_frames.keys():
@@ -43,7 +43,7 @@ for key in data_frames.keys():
 
 # ## Rename countries
 
-# In[4]:
+# In[34]:
 
 
 for key in data_frames.keys():
@@ -66,7 +66,7 @@ for key in data_frames.keys():
 
 # ## Separate 'countries' such as Greenland
 
-# In[5]:
+# In[35]:
 
 
 for key in data_frames.keys():
@@ -82,7 +82,7 @@ for key in data_frames.keys():
 
 # ## Group by country
 
-# In[6]:
+# In[36]:
 
 
 for key in data_frames.keys():
@@ -102,7 +102,7 @@ for key in data_frames.keys():
 
 # ## Reformat dates
 
-# In[7]:
+# In[37]:
 
 
 for key in data_frames.keys():
@@ -113,7 +113,7 @@ for key in data_frames.keys():
 
 # ## Add world population column
 
-# In[8]:
+# In[38]:
 
 
 population_df = pd.read_csv('generated/population.csv')
@@ -133,7 +133,7 @@ for key in data_frames.keys():
 
 # ## Add sick dataset (confirmed - recovered)
 
-# In[9]:
+# In[39]:
 
 
 confirmed = data_frames['confirmed']
@@ -148,7 +148,7 @@ data_frames['sick'] = sick
 
 # ## Add daily dataset (number of confirmed cases for each day)
 
-# In[10]:
+# In[40]:
 
 
 daily = data_frames['confirmed'].copy()
@@ -163,7 +163,7 @@ data_frames['daily'] = daily
 
 # ## Add world and continents rows
 
-# In[11]:
+# In[41]:
 
 
 # Continents code to name
@@ -234,7 +234,7 @@ for key in data_frames.keys():
 
 # ## Write back data
 
-# In[12]:
+# In[42]:
 
 
 for key in data_frames.keys():
@@ -243,7 +243,7 @@ for key in data_frames.keys():
 
 # ## Governments measures generation
 
-# In[30]:
+# In[49]:
 
 
 from urllib.request import urlopen
@@ -263,7 +263,7 @@ data_full.columns = [s.strip('_') for s in data_full.columns]
 data_full.loc[data_full['DATE_IMPLEMENTED'].isna(), 'DATE_IMPLEMENTED'] = data_full.loc[data_full['DATE_IMPLEMENTED'].isna(), 'ENTRY_DATE']
 
 
-# In[17]:
+# In[50]:
 
 
 data = data_full[['COUNTRY', 'LOG_TYPE', 'CATEGORY', 'MEASURE', 'COMMENTS', 'DATE_IMPLEMENTED']]
@@ -273,7 +273,7 @@ data
 
 # Match the countries, delete the countries that are not in our dataset on corona cases
 
-# In[18]:
+# In[64]:
 
 
 original = pd.read_csv('generated/confirmed.csv')
@@ -297,25 +297,36 @@ country_matching = {'Viet Nam': 'Vietnam',
 others = ['Turkmenistan', 'Vanuatu', 'Tuvalu', 'Tonga', 'Tajikistan', 'Solomon Islands', 
           'Samoa', 'Palau', 'Nauru', 'Micronesia', 'Marshall Islands', 'Lesotho', 'Korea DPR',
           'Kiribati', 'Comoros', 'China, Hong Kong Special Administrative Region']
+
+# Delete countries present in measure dataset without match in original (manual)
 data = data.loc[~data['COUNTRY'].isin(others), :]
+
+# Delete countries present in measure dataset without match in original (automatic)
+# Can check in countries_without_match_df to see if it's possible to match more countries
 data['COUNTRY'] = data['COUNTRY'].replace(country_matching)
-number_countries_not_in_original_dataset = (data[['COUNTRY']]
-                                            .drop_duplicates()
-                                            .merge(original[['Country/Region']], how='outer', left_on='COUNTRY', right_on='Country/Region')['Country/Region'].isna().sum())
-print('Number of incorrectly named countries relative to original dataset:', number_countries_not_in_original_dataset)
+countries_without_match_df = (data[['COUNTRY']].drop_duplicates()
+                              .merge(original[['Country/Region']], 
+                                     how='outer', 
+                                     left_on='COUNTRY', 
+                                     right_on='Country/Region'))
+countries_without_match = countries_without_match_df.loc[countries_without_match_df['Country/Region'].isna(), 
+                                                         'COUNTRY']
+data = data.loc[~data['COUNTRY'].isin(countries_without_match)]
+
+# Double check
+check_match = (data[['COUNTRY']].drop_duplicates()
+               .merge(original[['Country/Region']], 
+                      how='outer', 
+                      left_on='COUNTRY', 
+                      right_on='Country/Region')['Country/Region'].isna().sum())
+print('Number of incorrectly named countries relative to original dataset:', check_match)
 
 
-# In[19]:
+# In[46]:
 
 
 data.columns = ['country', 'log_type', 'category', 'measure', 'comment', 'date']
 data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d') 
 data.to_csv('generated/governments-measures.csv', index=False)
 data
-
-
-# In[ ]:
-
-
-
 
