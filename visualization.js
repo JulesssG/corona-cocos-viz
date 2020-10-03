@@ -163,7 +163,7 @@ function hslToHex(h, s, l) {
 }
 
 function timeSlider(svg, path, coutries_data) {
-    const formatDateIntoYearMonth = d3.timeFormat("%b %Y")
+    const formatDateIntoYearMonth = d3.timeFormat("%b")
     const formatDate = d3.timeFormat("%d %b")
 
     const totalDays = (maxDate_dt - minDate_dt) / (1000 * 3600 * 24)
